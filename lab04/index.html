@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  </head>
+
+  <body>
+    <main id="main-holder">
+      <div id="spacing"></div>
+
+      <div id="message-holder" class="invisible">
+        <p id="message"></p>
+      </div>
+
+      <a href="/logout" id="logout">Logout</a>
+
+      <h1 id="login-header">Login</h1>
+
+      <form id="login-form" action="/api/login" method="post">
+        <input
+          type="text"
+          name="login"
+          id="username-field"
+          class="login-form-field"
+          placeholder="Username"
+        />
+        <input
+          type="password"
+          name="password"
+          id="password-field"
+          class="login-form-field"
+          placeholder="Password"
+        />
+        <input type="submit" value="Login" id="login-form-submit" />
+      </form>
+
+      <h1 id="register-header">Register</h1>
+
+      <form id="register-form" action="/api/register" method="post">
+        <input
+          type="text"
+          name="login"
+          id="username"
+          class="login-form-field"
+          placeholder="Username"
+        />
+        <input
+          type="password"
+          name="password"
+          id="password"
+          class="login-form-field"
+          placeholder="Password"
+        />
+        <input
+          type="password"
+          name="repeatPassword"
+          id="repeat-password"
+          class="login-form-field"
+          placeholder="Repeat password"
+        />
+        <input type="submit" value="Register" id="register-form-submit" />
+      </form>
+    </main>
+  </body>
+
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      display: grid;
+      justify-items: center;
+      align-items: center;
+      background-color: #3a3a3a;
+    }
+
+    #spacing {
+      height: 20px;
+    }
+
+    #logout {
+      opacity: 0;
+    }
+
+    #main-holder {
+      width: 50%;
+      height: 70%;
+      display: grid;
+      justify-items: center;
+      align-items: center;
+      background-color: white;
+      border-radius: 7px;
+      box-shadow: 0px 0px 5px 2px black;
+    }
+
+    #message-holder {
+      width: 100%;
+      height: 100%;
+    }
+
+    #message {
+      width: 40%;
+      text-align: center;
+      margin: auto;
+      padding: 5px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    #message.error {
+      color: #8a0000;
+      border: 1px solid #8a0000;
+      background-color: #e58f8f;
+    }
+
+    #message.success {
+      color: #145410;
+      border: 1px solid #145410;
+      background-color: #31d527;
+    }
+
+    #login-form,
+    #register-form {
+      align-self: flex-start;
+      display: grid;
+      justify-items: center;
+      align-items: center;
+    }
+
+    .invisible {
+      display: none;
+    }
+
+    .login-form-field::placeholder {
+      color: #3a3a3a;
+    }
+
+    .login-form-field {
+      border: none;
+      border-bottom: 1px solid #3a3a3a;
+      margin-bottom: 10px;
+      border-radius: 3px;
+      outline: none;
+      padding: 0px 0px 5px 5px;
+    }
+
+    #login-form-submit,
+    #register-form-submit {
+      width: 100%;
+      padding: 7px;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      background-color: #3a3a3a;
+      cursor: pointer;
+      outline: none;
+    }
+  </style>
+
+  <script>
+    const loginForm = document.getElementById('login-form')
+    const loginButton = document.getElementById('login-form-submit')
+
+    const registerForm = document.getElementById('register-form')
+    const registerButton = document.getElementById('register-form-submit')
+
+    const messageHolder = document.getElementById('message-holder')
+    const message = document.getElementById('message')
+
+    const logoutLink = document.getElementById('logout')
+
+    const access = JSON.parse(localStorage.getItem('access'))
+
+    const parseJwt = (token) => {
+      if (!token) {
+        return null
+      }
+      const base64Url = token.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      )
+
+      return JSON.parse(jsonPayload)
+    }
+
+    const showMessage = (text, type = 'error') => {
+      if (text.response.status === 401) {
+        document.location.href = '/'
+      }
+      message.innerText = text
+      message.classList.remove('error')
+      message.classList.remove('success')
+      message.classList.add(type)
+
+      messageHolder.classList.remove('invisible')
+    }
+
+    const hideMessage = () => {
+      messageHolder.classList.add('invisible')
+    }
+
+    const showProfile = (idToken) => {
+      const { nickname } = parseJwt(idToken)
+      const mainHolder = document.getElementById('main-holder')
+      const loginHeader = document.getElementById('login-header')
+      const registerHeader = document.getElementById('register-header')
+
+      loginForm.remove()
+      registerForm.remove()
+      hideMessage()
+      loginHeader.remove()
+      registerHeader.remove()
+
+      mainHolder.append(`Hello ${nickname}`)
+      logoutLink.style.opacity = 1
+    }
+
+    const refreshAccessToken = async (refreshToken) => {
+      const response = await axios.post('/api/token', {
+        refreshToken: refreshToken,
+      })
+      console.log(response)
+      return response.data.accessToken
+    }
+
+    const runWithAccessToken = async (callback) => {
+      const access = JSON.parse(localStorage.getItem('access'))
+      const accessToken = access.accessToken
+      const now = new Date().getTime()
+      const expired = !accessToken || parseJwt(accessToken).exp * 1000 - now < 5000
+      if (expired) {
+        access.accessToken = await refreshAccessToken(access.refreshToken)
+        localStorage.setItem('access', JSON.stringify(access))
+      }
+      callback(access.accessToken).catch(async (error) => {
+        if (error.request.status === 401) {
+          access.accessToken = await refreshAccessToken(access.refreshToken)
+          localStorage.setItem('access', JSON.stringify(access))
+          callback(access.accessToken).catch((error) => showMessage(error))
+        }
+      })
+    }
+
+    const showPrivateContent = (accessToken) => {
+      return axios
+        .get('/api/private', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+        .then((response) => {
+          if (response.data.message) {
+            showMessage(response.data.message, 'success')
+          }
+        })
+    }
+
+    if (access) {
+      showProfile(access.idToken)
+      runWithAccessToken((token) => showPrivateContent(token))
+    }
+
+    logoutLink.addEventListener('click', (e) => {
+      e.preventDefault()
+      localStorage.removeItem('access')
+      location.reload()
+    })
+
+    loginButton.addEventListener('click', (e) => {
+      e.preventDefault()
+      const username = loginForm.login.value
+      const password = loginForm.password.value
+
+      axios({
+        method: 'post',
+        url: '/api/login',
+        data: {
+          username,
+          password,
+        },
+      })
+        .then((response) => {
+          localStorage.setItem('access', JSON.stringify(response.data))
+          location.reload()
+        })
+        .catch(() => {
+          showMessage('Invalid username or/and password')
+        })
+    })
+
+    registerButton.addEventListener('click', (e) => {
+      e.preventDefault()
+      const username = registerForm.login.value
+      const password = registerForm.password.value
+      const repeatPassword = registerForm.repeatPassword.value
+
+      if (password !== repeatPassword) {
+        showMessage('Passwords are not equal')
+        return
+      }
+
+      axios({
+        method: 'post',
+        url: '/api/register',
+        data: {
+          username,
+          password,
+        },
+      })
+        .then((response) => {
+          console.log(response)
+          if (response.data.nickname) {
+            showMessage('Successfully registered. Try to login!', 'success')
+          } else {
+            showMessage('Something weng wrong...')
+          }
+        })
+        .catch(() => {
+          showMessage('Something went wrong...')
+        })
+    })
+  </script>
+</html>
