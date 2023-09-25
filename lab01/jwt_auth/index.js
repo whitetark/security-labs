@@ -1,57 +1,48 @@
-const uuid = require('uuid')
 const express = require('express')
+const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser')
-const jwt = require('jsonwebtoken')
 const path = require('path')
 const port = 3000
+const jwt = require('jsonwebtoken')
 
 const app = express()
+
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(cookieParser())
+
+const SESSION_KEY = 'Authorization'
+const jwtKey = 'whii'
+const tokenExpirationTime = 60
 
 const users = [
   {
-    login: 'Sviat',
-    password: '1111',
-    username: 'Name',
+    login: 'Login',
+    password: 'Password',
+    username: 'Username1',
   },
   {
-    login: 'Sviat2',
-    password: '2222',
-    username: 'Name2',
+    login: 'whitetark',
+    password: '123456',
+    username: 'whitetark',
   },
 ]
 
-const SESSION_KEY = 'Authorization'
-
-app.use((req, res, next) => {
-  const sessionId = req.get(SESSION_KEY)
-  let user = null
-
-  if (sessionId) {
-    const tokenData = jwt.verify(sessionId, `${process.env.TOKEN_KEY}`)
-
-    if (tokenData) {
-      user = users.find(
-        (user) => user.login == tokenData.login && user.username == tokenData.username
-      )
-    }
-
-    req.username = user ? user.username : null
-    req.sessionId = sessionId
-  }
-
-  next()
-})
-
 app.get('/', (req, res) => {
-  if (req.username) {
-    return res.json({
-      username: req.username,
-      logout: 'http://localhost:3000/logout',
-    })
+  let token = req.get(SESSION_KEY)
+  let reqBody
+  if (token) {
+    try {
+      reqBody = jwt.verify(token, jwtKey)
+    } catch (e) {
+      if (e instanceof jwt.JsonWebTokenError) {
+        return res.sendFile(path.join(__dirname + '/index.html'))
+      }
+    }
+  } else {
+    return res.sendFile(path.join(__dirname + '/index.html'))
   }
-  res.sendFile(path.join(__dirname + '/index.html'))
+
+  res.json({ username: reqBody.username, logout: `http://localhost:3000/logout` })
 })
 
 app.get('/logout', (req, res) => {
@@ -60,21 +51,16 @@ app.get('/logout', (req, res) => {
 
 app.post('/api/login', (req, res) => {
   const { login, password } = req.body
-
   const user = users.find((user) => {
-    if (user.login == login && user.password == password) {
-      return true
-    }
-    return false
+    return user.login == login && user.password == password
   })
 
   if (user) {
-    const token = jwt.sign(
-      { login: user.login, username: user.username },
-      `${process.env.TOKEN_KEY}`,
-      { expiresIn: '2h' }
-    )
-    res.json({ token })
+    const token = jwt.sign({ login: login, username: user.username }, jwtKey, {
+      algorithm: 'HS256',
+      expiresIn: tokenExpirationTime,
+    })
+    return res.json({ token: token })
   }
 
   res.status(401).send()

@@ -103,12 +103,12 @@ const users = [
   {
     login: 'Login',
     password: 'Password',
-    username: 'Username',
+    username: 'JWT_Test1',
   },
   {
-    login: 'Login1',
-    password: 'Password1',
-    username: 'Username1',
+    login: 'whitetark',
+    password: '123456',
+    username: 'whitetark',
   },
 ]
 
