@@ -1,9 +1,9 @@
-const axios = require('axios')
+const axios = require('axios');
 
-const CLIENT_ID = 'JIvCO5c2IBHlAe2patn6l6q5H35qxti0'
-const CLIENT_SECRET = 'ZRF8Op0tWM36p1_hxXTU-B0K_Gq_-eAVtlrQpY24CasYiDmcXBhNS6IJMNcz1EgB'
-const AUDIENCE = 'https://kpi.eu.auth0.com/api/v2'
-const CONNECTION = 'Username-Password-Authentication'
+const CLIENT_ID = 'JIvCO5c2IBHlAe2patn6l6q5H35qxti0';
+const CLIENT_SECRET = 'ZRF8Op0tWM36p1_hxXTU-B0K_Gq_-eAVtlrQpY24CasYiDmcXBhNS6IJMNcz1EgB';
+const AUDIENCE = 'https://kpi.eu.auth0.com/api/v2';
+const CONNECTION = 'Username-Password-Authentication';
 
 const getApiToken = async () => {
   const response = await axios.post(
@@ -18,10 +18,10 @@ const getApiToken = async () => {
       headers: {
         'Accept-Encoding': 'application/json',
       },
-    }
-  )
-  return response.data.access_token
-}
+    },
+  );
+  return response.data.access_token;
+};
 
 const login = async (username, password) => {
   try {
@@ -40,24 +40,23 @@ const login = async (username, password) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'Accept-Encoding': 'application/json',
         },
-      }
-    )
+      },
+    );
     return {
       accessToken: response.data.access_token,
       refreshToken: response.data.refresh_token,
       idToken: response.data.id_token,
-    }
+    };
   } catch (error) {
-    return null
+    return null;
   }
-}
+};
 
 const register = async (username, password) => {
   try {
-    const accessToken = await getApiToken()
+    const accessToken = await getApiToken();
+    console.log('here');
     const response = await axios.post(
       'https://kpi.eu.auth0.com/api/v2/users',
       {
@@ -68,15 +67,16 @@ const register = async (username, password) => {
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          'Accept-Encoding': 'application/json',
+          'Content-Type': 'application/json',
         },
-      }
-    )
-    return response.data
+      },
+    );
+    return response.data;
   } catch (error) {
-    return null
+    console.log(error);
+    return null;
   }
-}
+};
 
 const refresh = async (refreshToken) => {
   try {
@@ -92,16 +92,16 @@ const refresh = async (refreshToken) => {
         headers: {
           'Accept-Encoding': 'application/json',
         },
-      }
-    )
-    return response.data
+      },
+    );
+    return response.data;
   } catch (error) {
-    return null
+    return null;
   }
-}
+};
 
 module.exports = {
   login,
   register,
   refresh,
-}
+};

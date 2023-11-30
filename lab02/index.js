@@ -1,6 +1,6 @@
-const request = require('request-promise')
-const url = 'https://dev-sry1u1oubbjoil16.us.auth0.com'
-let token
+const request = require('request-promise');
+const url = 'https://dev-sry1u1oubbjoil16.us.auth0.com';
+let token;
 
 const options = {
   method: 'POST',
@@ -12,7 +12,7 @@ const options = {
     audience: `${url}/api/v2/`,
     grant_type: 'client_credentials',
   },
-}
+};
 
 const formRequestOptions = (token) => {
   return (result = {
@@ -39,17 +39,17 @@ const formRequestOptions = (token) => {
       password: 'Paccwrd#228',
       verify_email: false,
     }),
-  })
-}
+  });
+};
 
 request(options, (err, res, body) => {
-  if (err) throw new Error(err)
-  token = JSON.parse(body).access_token
+  if (err) throw new Error(err);
+  token = JSON.parse(body).access_token;
 }).then(() => {
-  const newOptions = formRequestOptions(token)
-  console.log(newOptions)
+  const newOptions = formRequestOptions(token);
+  console.log(newOptions);
   request(newOptions, (err, res, body) => {
-    if (err) throw new Error(err)
-    console.log(body)
-  })
-})
+    if (err) throw new Error(err);
+    console.log(body);
+  });
+});
