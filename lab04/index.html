@@ -25,15 +25,13 @@
           name="login"
           id="username-field"
           class="login-form-field"
-          placeholder="Username"
-        />
+          placeholder="Username" />
         <input
           type="password"
           name="password"
           id="password-field"
           class="login-form-field"
-          placeholder="Password"
-        />
+          placeholder="Password" />
         <input type="submit" value="Login" id="login-form-submit" />
       </form>
 
@@ -45,22 +43,19 @@
           name="login"
           id="username"
           class="login-form-field"
-          placeholder="Username"
-        />
+          placeholder="Username" />
         <input
           type="password"
           name="password"
           id="password"
           class="login-form-field"
-          placeholder="Password"
-        />
+          placeholder="Password" />
         <input
           type="password"
           name="repeatPassword"
           id="repeat-password"
           class="login-form-field"
-          placeholder="Repeat password"
-        />
+          placeholder="Repeat password" />
         <input type="submit" value="Register" id="register-form-submit" />
       </form>
     </main>
@@ -166,93 +161,93 @@
   </style>
 
   <script>
-    const loginForm = document.getElementById('login-form')
-    const loginButton = document.getElementById('login-form-submit')
+    const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-form-submit');
 
-    const registerForm = document.getElementById('register-form')
-    const registerButton = document.getElementById('register-form-submit')
+    const registerForm = document.getElementById('register-form');
+    const registerButton = document.getElementById('register-form-submit');
 
-    const messageHolder = document.getElementById('message-holder')
-    const message = document.getElementById('message')
+    const messageHolder = document.getElementById('message-holder');
+    const message = document.getElementById('message');
 
-    const logoutLink = document.getElementById('logout')
+    const logoutLink = document.getElementById('logout');
 
-    const access = JSON.parse(localStorage.getItem('access'))
+    const access = JSON.parse(localStorage.getItem('access'));
 
     const parseJwt = (token) => {
       if (!token) {
-        return null
+        return null;
       }
-      const base64Url = token.split('.')[1]
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(
         window
           .atob(base64)
           .split('')
           .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      )
+          .join(''),
+      );
 
-      return JSON.parse(jsonPayload)
-    }
+      return JSON.parse(jsonPayload);
+    };
 
     const showMessage = (text, type = 'error') => {
       if (text.response.status === 401) {
-        document.location.href = '/'
+        document.location.href = '/';
       }
-      message.innerText = text
-      message.classList.remove('error')
-      message.classList.remove('success')
-      message.classList.add(type)
+      message.innerText = text;
+      message.classList.remove('error');
+      message.classList.remove('success');
+      message.classList.add(type);
 
-      messageHolder.classList.remove('invisible')
-    }
+      messageHolder.classList.remove('invisible');
+    };
 
     const hideMessage = () => {
-      messageHolder.classList.add('invisible')
-    }
+      messageHolder.classList.add('invisible');
+    };
 
     const showProfile = (idToken) => {
-      const { nickname } = parseJwt(idToken)
-      const mainHolder = document.getElementById('main-holder')
-      const loginHeader = document.getElementById('login-header')
-      const registerHeader = document.getElementById('register-header')
+      const { nickname } = parseJwt(idToken);
+      const mainHolder = document.getElementById('main-holder');
+      const loginHeader = document.getElementById('login-header');
+      const registerHeader = document.getElementById('register-header');
 
-      loginForm.remove()
-      registerForm.remove()
-      hideMessage()
-      loginHeader.remove()
-      registerHeader.remove()
+      loginForm.remove();
+      registerForm.remove();
+      hideMessage();
+      loginHeader.remove();
+      registerHeader.remove();
 
-      mainHolder.append(`Hello ${nickname}`)
-      logoutLink.style.opacity = 1
-    }
+      mainHolder.append(`Hello ${nickname}`);
+      logoutLink.style.opacity = 1;
+    };
 
     const refreshAccessToken = async (refreshToken) => {
       const response = await axios.post('/api/token', {
         refreshToken: refreshToken,
-      })
-      console.log(response)
-      return response.data.accessToken
-    }
+      });
+      console.log(response);
+      return response.data.accessToken;
+    };
 
     const runWithAccessToken = async (callback) => {
-      const access = JSON.parse(localStorage.getItem('access'))
-      const accessToken = access.accessToken
-      const now = new Date().getTime()
-      const expired = !accessToken || parseJwt(accessToken).exp * 1000 - now < 5000
+      const access = JSON.parse(localStorage.getItem('access'));
+      const accessToken = access.accessToken;
+      const now = new Date().getTime();
+      const expired = !accessToken || parseJwt(accessToken).exp * 1000 - now < 5000;
       if (expired) {
-        access.accessToken = await refreshAccessToken(access.refreshToken)
-        localStorage.setItem('access', JSON.stringify(access))
+        access.accessToken = await refreshAccessToken(access.refreshToken);
+        localStorage.setItem('access', JSON.stringify(access));
       }
       callback(access.accessToken).catch(async (error) => {
         if (error.request.status === 401) {
-          access.accessToken = await refreshAccessToken(access.refreshToken)
-          localStorage.setItem('access', JSON.stringify(access))
-          callback(access.accessToken).catch((error) => showMessage(error))
+          access.accessToken = await refreshAccessToken(access.refreshToken);
+          localStorage.setItem('access', JSON.stringify(access));
+          callback(access.accessToken).catch((error) => showMessage(error));
         }
-      })
-    }
+      });
+    };
 
     const showPrivateContent = (accessToken) => {
       return axios
@@ -263,26 +258,26 @@
         })
         .then((response) => {
           if (response.data.message) {
-            showMessage(response.data.message, 'success')
+            showMessage(response.data.message, 'success');
           }
-        })
-    }
+        });
+    };
 
     if (access) {
-      showProfile(access.idToken)
-      runWithAccessToken((token) => showPrivateContent(token))
+      showProfile(access.idToken);
+      runWithAccessToken((token) => showPrivateContent(token));
     }
 
     logoutLink.addEventListener('click', (e) => {
-      e.preventDefault()
-      localStorage.removeItem('access')
-      location.reload()
-    })
+      e.preventDefault();
+      localStorage.removeItem('access');
+      location.reload();
+    });
 
     loginButton.addEventListener('click', (e) => {
-      e.preventDefault()
-      const username = loginForm.login.value
-      const password = loginForm.password.value
+      e.preventDefault();
+      const username = loginForm.login.value;
+      const password = loginForm.password.value;
 
       axios({
         method: 'post',
@@ -293,23 +288,23 @@
         },
       })
         .then((response) => {
-          localStorage.setItem('access', JSON.stringify(response.data))
-          location.reload()
+          localStorage.setItem('access', JSON.stringify(response.data));
+          location.reload();
         })
         .catch(() => {
-          showMessage('Invalid username or/and password')
-        })
-    })
+          showMessage('Invalid username or/and password');
+        });
+    });
 
     registerButton.addEventListener('click', (e) => {
-      e.preventDefault()
-      const username = registerForm.login.value
-      const password = registerForm.password.value
-      const repeatPassword = registerForm.repeatPassword.value
+      e.preventDefault();
+      const username = registerForm.login.value;
+      const password = registerForm.password.value;
+      const repeatPassword = registerForm.repeatPassword.value;
 
       if (password !== repeatPassword) {
-        showMessage('Passwords are not equal')
-        return
+        showMessage('Passwords are not equal');
+        return;
       }
 
       axios({
@@ -321,16 +316,16 @@
         },
       })
         .then((response) => {
-          console.log(response)
+          console.log(response);
           if (response.data.nickname) {
-            showMessage('Successfully registered. Try to login!', 'success')
+            showMessage('Successfully registered. Try to login!', 'success');
           } else {
-            showMessage('Something weng wrong...')
+            showMessage('Something weng wrong...');
           }
         })
         .catch(() => {
-          showMessage('Something went wrong...')
-        })
-    })
+          showMessage('Something went wrong...');
+        });
+    });
   </script>
 </html>

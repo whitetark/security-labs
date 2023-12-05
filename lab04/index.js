@@ -10,8 +10,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const checkJwt = auth({
-  audience: 'https://kpi.eu.auth0.com/api/v2',
-  issuerBaseURL: 'https://kpi.eu.auth0.com',
+  audience: 'https://dev-sry1u1oubbjoil16.us.auth0.com/api/v2/',
+  issuerBaseURL: 'https://dev-sry1u1oubbjoil16.us.auth0.com',
 });
 
 app.get('/', (req, res) => {
